@@ -1,0 +1,124 @@
+package com.chenxu.luckmoney;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.chenxu.luckmoney.service.LuckMoneyService;
+import com.chenxu.luckmoney.util.AccessbilityUtil;
+import com.chenxu.luckmoney.util.ScreenUtil;
+import com.chenxu.luckmoney.util.SharedPreferencesUtil;
+import com.chenxu.luckmoney.R;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+/**
+ * @author yorhp
+ */
+public class MainActivity extends AppCompatActivity {
+
+    Switch swWx;
+    CheckBox ckSingle,ckPause;
+    TextView tvTime,tvOpenTime,tvDevice;
+
+    /**
+     * 等待红包弹出窗时间
+     */
+    private static final int MAX_WAIT_WINDOW_TIME=3000;
+
+    /**
+     * 保存状态字段
+     */
+    public static final String NEED_SET_TIME="need_set_time";
+    public static final String WAIT_WINDOW_TIME="waitWindowTimeMax";
+    public static final String WAIT_GET_MONEY_TIME="waitGetMoneyTime";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        SharedPreferencesUtil.init(getApplication());
+        setContentView(R.layout.activity_main);
+        ScreenUtil.getScreenSize(this);
+        ckSingle = findViewById(R.id.ckSingle);
+        ckPause = findViewById(R.id.ckPause);
+        swWx = findViewById(R.id.swWx);
+        tvDevice=findViewById(R.id.tv_device);
+        tvTime=findViewById(R.id.tv_wait_time);
+        LuckMoneyService.waitWindowTime_max=SharedPreferencesUtil.getInt(WAIT_WINDOW_TIME,3000);
+        tvTime.setText(LuckMoneyService.waitWindowTime_max+"ms");
+        tvOpenTime=findViewById(R.id.tv_wait_open_time);
+        LuckMoneyService.waitGetMoneyTime=SharedPreferencesUtil.getInt(WAIT_GET_MONEY_TIME,700);
+        tvOpenTime.setText(LuckMoneyService.waitGetMoneyTime+"ms");
+        swWx.setOnClickListener((v) -> {
+            startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+        });
+        ckSingle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                LuckMoneyService.isSingle = b;
+            }
+        });
+
+        ckPause.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                LuckMoneyService.isPause = b;
+            }
+        });
+
+        findViewById(R.id.ll_wait_time).setOnClickListener(v->{
+            if(LuckMoneyService.needSetTime==0){
+                Toast.makeText(MainActivity.this,"当前不可修改",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(LuckMoneyService.waitWindowTime_max<MAX_WAIT_WINDOW_TIME){
+                LuckMoneyService.waitWindowTime_max=LuckMoneyService.waitWindowTime_max+1000;
+            }else {
+                LuckMoneyService.waitWindowTime_max=1000;
+            }
+            tvTime.setText(LuckMoneyService.waitWindowTime_max+"ms");
+        });
+
+        findViewById(R.id.ll_wait_open_time).setOnClickListener(v->{
+            if(LuckMoneyService.needSetTime==0){
+                Toast.makeText(MainActivity.this,"当前不可修改",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(LuckMoneyService.waitGetMoneyTime<MAX_WAIT_WINDOW_TIME){
+                LuckMoneyService.waitGetMoneyTime=LuckMoneyService.waitGetMoneyTime+100;
+            }else {
+                LuckMoneyService.waitGetMoneyTime=0;
+            }
+            tvOpenTime.setText(LuckMoneyService.waitGetMoneyTime+"ms");
+        });
+
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(LuckMoneyService.needSetTime==-1){
+            LuckMoneyService.needSetTime=SharedPreferencesUtil.getInt(NEED_SET_TIME,-1);
+        }
+        swWx.setChecked(AccessbilityUtil.isAccessibilitySettingsOn(this, LuckMoneyService.class));
+        if(LuckMoneyService.needSetTime==1){
+            tvDevice.setText("当前设备需要进行下面两项时间设置以达到最佳状态，值的大小不会影响抢红包的速度，值越大越能确保抢到红包，但是值太大返回流程可能会出问题，无法继续抢下一个");
+        }else if(LuckMoneyService.needSetTime==0){
+            tvDevice.setText("当前设备不需要关心下面两项设置");
+        }
+        SharedPreferencesUtil.save(NEED_SET_TIME,LuckMoneyService.needSetTime);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        SharedPreferencesUtil.save(WAIT_WINDOW_TIME,LuckMoneyService.waitWindowTime_max);
+        SharedPreferencesUtil.save(WAIT_GET_MONEY_TIME,LuckMoneyService.waitGetMoneyTime);
+    }
+}
