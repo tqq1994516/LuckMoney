@@ -89,6 +89,10 @@ public abstract class BaseAccessbilityService extends AccessibilityService {
         if (nodeInfo.getChild(1).getChild(0).getChild(1) != null && nodeInfo.getChild(1).getChild(0).getChild(1).getChildCount() == 2) {
             return;
         }
+        // 跳过自己的红包
+        if (nodeInfo.getParent() != null && nodeInfo.getParent().getParent() != null && nodeInfo.getParent().getParent().getChildCount() == 2 && nodeInfo.getParent().getParent().getChild(1).getClassName().equals("android.widget.RelativeLayout")) {
+            return;
+        }
         while (nodeInfo != null) {
             if (nodeInfo.isClickable()) {
                 nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);

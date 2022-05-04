@@ -175,26 +175,26 @@ public class LuckMoneyService extends BaseAccessbilityService {
         if (event.getParcelableData() != null && event.getParcelableData() instanceof Notification) {
             Log.e(TAG,"接收到通知栏消息");
             //如果当前界面是在消息列表内，并且单独抢这个群，则不必点击通知消息
-            if(!isInChatList||!isSingle){
-                Notification notification = (Notification) event.getParcelableData();
-                //获取通知消息详情
-                String content = notification.tickerText.toString();
-                //解析消息
-                String[] msg = content.split(":");
-                String text = msg[1].trim();
-                Log.i(TAG, "onAccessibilityEvent: " + text);
-                if (text.contains(HONG_BAO_TXT)) {
-                    Log.e(TAG,"接收到通知栏红包消息");
-                    PendingIntent pendingIntent = notification.contentIntent;
-                    try {
-                        //点击消息，进入聊天界面
-                        pendingIntent.send();
-                    } catch (PendingIntent.CanceledException e) {
-                        e.printStackTrace();
-                    }
+//            if(!isInChatList||!isSingle){
+            Notification notification = (Notification) event.getParcelableData();
+            //获取通知消息详情
+            String content = notification.tickerText.toString();
+            //解析消息
+            String[] msg = content.split(":");
+            String text = msg[1].trim();
+            Log.i(TAG, "onAccessibilityEvent: " + text);
+            if (text.contains(HONG_BAO_TXT)) {
+                Log.e(TAG,"接收到通知栏红包消息");
+                PendingIntent pendingIntent = notification.contentIntent;
+                try {
+                    //点击消息，进入聊天界面
+                    pendingIntent.send();
+                } catch (PendingIntent.CanceledException e) {
+                    e.printStackTrace();
                 }
             }
-            return;
+//            }
+//            return;
         }
 
 
